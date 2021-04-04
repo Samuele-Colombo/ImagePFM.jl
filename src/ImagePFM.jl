@@ -15,9 +15,9 @@ function load(f::File{DataFormat{:PFM}}; kwargs...)
 end
 function load(s::Stream{FMT}; permute_horizontal=false, kwargs...) where {FMT<:DataFormat{:PFM}}
     if permute_horizontal
-        return permutedims(read(stream(s), FMT(), kwargs...), (2, 1))
-    else
         return read(stream(s), FMT(), kwargs...)
+    else
+        return permutedims(read(stream(s), FMT(), kwargs...), (2, 1))
     end
 end
 
@@ -30,10 +30,10 @@ end
 function save(s::Stream{FMT}, image::AbstractMatrix; permute_horizontal=false, mapi=identity, kwargs...) where {FMT<:DataFormat{:PFM}}
     imgout = map(mapi, image)
     if permute_horizontal
+        return write(stream(s), FMT(), imgout, kwargs...)
+    else
         perm = ndims(imgout) == 2 ? (2, 1) : error("$(ndims(imgout)) dims array is not supported")
         return write(stream(s), FMT(), PermutedDimsArray(imgout, perm), kwargs...)
-    else
-        return write(stream(s), FMT(), imgout, kwargs...)
     end
 end
 
