@@ -1,6 +1,6 @@
 name = "ImagePFM"
 uuid = "de255290-5529-4d77-9c46-251ebffccf2e"
-authors = ["Samuele-Colombo <samuele.colombo1@studenti.unimi.it>"]
+authors = ["Samuele-Colombo <samuele.colombo1@studenti.unimi.it>", "Paolo Galli <49845775+Paolo97Gll@users.noreply.github.com>"]
 version = "0.1.0"
 
 [deps]
