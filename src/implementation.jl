@@ -33,7 +33,7 @@ end
 
 Read a PFM image from stream.
 """
-function read(io::IO, fmt::::Type{format"PFM"})
+function read(io::IO, fmt::Type{format"PFM"})
     try
         skipmagic(io, fmt)
     catch e
