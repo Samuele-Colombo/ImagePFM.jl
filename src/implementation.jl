@@ -3,9 +3,9 @@ const little_endian = ENDIAN_BOM == 0x04030201
 # write on stream in PFM format
 # need HdrImage broadcasting
 """
-    write(io::IO, fmt::format"PFM", image)
+    write(io::IO, format"PFM", image)
 
-Write an image to stream in an encoding determined by the [`FE`](@ref).
+Write an image to stream in PFM format.
 # Examples
 ```jldoctest
 julia> image = HdrImage(RGB{Float32}[RGB(1.0e1, 2.0e1, 3.0e1) RGB(1.0e2, 2.0e2, 3.0e2)
@@ -18,7 +18,7 @@ julia> write(io, FE("pfm"), image) # write to stream in pfm format, return numbe
 84
 ```
 """
-function write(io::IO, ::format"PFM", image::AbstractMatrix{<:RGB})
+function write(io::IO, ::Type{format"PFM"}, image::AbstractMatrix{<:RGB})
     head = transcode(UInt8, "PF\n$(join(size(image)," "))\n$(little_endian ? -1. : 1.)\n")
     Base.write(io, head, (c for c ∈ @view image[:, end:-1:begin])...)
 end
@@ -29,13 +29,13 @@ end
 
 # read PFM file from stream
 """
-    read(io::IO, fmt::format"PFM")
+    read(io::IO, format"PFM")
 
-Read an image from stream. The decoding method is determined by the [`FE`](@ref).
+Read a PFM image from stream.
 """
-function read(io::IO, fmt::format"PFM")
+function read(io::IO, fmt::::Type{format"PFM"})
     try
-        skipmagic(io, typeof(fmt))
+        skipmagic(io, fmt)
     catch e
         isa(e, ErrorException) && throw(InvalidPfmFileFormat("invalid head in PFM file: magic: expected $(magic(fmt))"))
     end
