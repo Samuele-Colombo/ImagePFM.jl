@@ -3,7 +3,7 @@ module ImagePFM
 import Base: iterate
 import ColorTypes: RGB
 using FileIO: File, Stream, stream, DataFormat, @format_str, skipmagic, query
-export read, write
+export read, write, InvalidPfmFileFormat
 
 include("exceptions.jl")
 include("implementation.jl")
