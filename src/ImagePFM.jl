@@ -8,6 +8,11 @@ export read, write, InvalidPfmFileFormat
 include("exceptions.jl")
 include("implementation.jl")
 
+#=
+Here we implement the `load` and `save` methods for the PFM data format that will be used by `FileIO`
+For more information consult the `FileIO` documentation on adding new formats and implementing load/save behavior
+=#
+
 function load(f::File{DataFormat{:PFM}}; kwargs...)
     open(f) do s
         load(s, kwargs...)
@@ -26,7 +31,6 @@ function save(f::File{DataFormat{:PFM}}, image::AbstractMatrix; kwargs...)
         save(s, image, kwargs...)
     end
 end
-
 function save(s::Stream{FMT}, image::AbstractMatrix; permute_horizontal=false, mapi=identity, kwargs...) where {FMT<:DataFormat{:PFM}}
     imgout = map(mapi, image)
     if permute_horizontal

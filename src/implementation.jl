@@ -1,20 +1,27 @@
+# `true` if system is little_endian
 const little_endian = ENDIAN_BOM == 0x04030201
 
 # write on stream in PFM format
-# need HdrImage broadcasting
 """
     write(io::IO, format"PFM", image)
 
 Write an image to stream in PFM format.
+
+A PFM files has an head containing, in order, 
+    - the magic bytes `PF\\n`,
+    - the image width and height,
+    - either -1.0 or 1.0 for little and big endian encoding of binary data respectively.
+Then the `RGB(Float32)` image will be written as binary data scanning the image left to right - bottom to top.
+
 # Examples
 ```jldoctest
-julia> image = HdrImage(RGB{Float32}[RGB(1.0e1, 2.0e1, 3.0e1) RGB(1.0e2, 2.0e2, 3.0e2)
-                                     RGB(4.0e1, 5.0e1, 6.0e1) RGB(4.0e2, 5.0e2, 6.0e2)
-                                     RGB(7.0e1, 8.0e1, 9.0e1) RGB(7.0e2, 8.0e2, 9.0e2)]);
+julia> image = RGB{Float32}[RGB(1.0e1, 2.0e1, 3.0e1) RGB(1.0e2, 2.0e2, 3.0e2)
+                            RGB(4.0e1, 5.0e1, 6.0e1) RGB(4.0e2, 5.0e2, 6.0e2)
+                            RGB(7.0e1, 8.0e1, 9.0e1) RGB(7.0e2, 8.0e2, 9.0e2)];
 
 julia> io = IOBuffer();
 
-julia> write(io, FE("pfm"), image) # write to stream in pfm format, return number of bytes written
+julia> ImagePFM.write(io, format"PFM", image) # write to stream in pfm format, return number of bytes written
 84
 ```
 """
@@ -23,6 +30,8 @@ function write(io::IO, ::Type{format"PFM"}, image::AbstractMatrix{<:RGB})
     Base.write(io, head, (c for c ∈ @view image[:, end:-1:begin])...)
 end
 
+# overload of the `Base.write` function for the RGB type
+# behavior is similar to the one of a generic container
 function Base.write(io::IO, c::RGB)
     Base.write(io, c.r, c.g, c.b)
 end
@@ -31,7 +40,11 @@ end
 """
     read(io::IO, format"PFM")
 
-Read a PFM image from stream.
+Read a PFM image from stream. 
+
+After skipping the magic bytes `PF\\n` the image width and height will be parsed, then the source endiannes. 
+The `RGB(Float32)` matrix will be read up to the `(width * height)`th element. The presence of additional data won't be considered an error.
+Note that, unlike `Base.read`, this function will convert endiannes for you from the declared source endiannes to the host endiannes.
 """
 function read(io::IO, fmt::Type{format"PFM"})
     try
@@ -63,7 +76,7 @@ function _parse_img_size(line::String)
     img_width, img_height = map(_parse_int ∘ string, elements)
 end
 
-# verify that the given String is parsable to type and return its parsed value
+# verify that the given String is parsable to a type `UInt` and return its parsed value
 function _parse_int(str::String)
     DestT = UInt
     try
@@ -74,7 +87,7 @@ function _parse_int(str::String)
     end
 end
 
-# verify that the given String is parsable to type Float32 and is equal to ±1.0
+# verify that the given String is parsable to type `Float32` and is equal to ±1.0
 # if the parsed value is equal to +1.0 then file endianness is big-endian
 # else if it is equal to -1.0 then endianness is little-endian
 # return a function that translates from file endianness to host endianness
@@ -117,7 +130,8 @@ function _read_type(io::IO, DestT::Type)
     reinterpret(DestT, data)[1]
 end
 
-# Utility interface for a stram containing at least n T type instances. Useful to read sets of values in a more compact notation
+# Utility interface for a stram containing at least `n` `T` type instances. 
+# Useful for reading sets of values in a more compact notation
 struct _TypeStream
     io::IO
     T::Type
@@ -134,6 +148,7 @@ function iterate(s::_TypeStream, state = 1)
     end
 end
 
+# Utility function to read single instance of an `RGB` type
 function _read(io::IO, C::Type{<:RGB})
     C(_TypeStream(io, eltype(C), 3)...)
 end
