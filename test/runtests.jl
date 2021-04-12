@@ -49,7 +49,6 @@ end
 end
 
 # test _read_line
-# TODO Paolo: improve tests with all the possible cases
 @testset "_read_line" begin
     io = IOBuffer(b"hello\nworld")
     @test _read_line(io) == "hello\n"
