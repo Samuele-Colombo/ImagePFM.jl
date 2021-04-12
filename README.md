@@ -22,10 +22,12 @@ pkg> add https://github.com/Samuele-Colombo/ImagePFM.jl
 This module is not intended to be used directly, it only extends the capabilities of the `FileIO` package including the `pfm` format load/save.
 
 ```julia
-julia> using FileIO
-julia> import ColorTypes: RGB # `ColorTypes` must be in current project
-julia> save("test.pfm", rand(RGB, 100, 100))
-julia> load("test.pfm")
+using FileIO
+# `ColorTypes` package must be in current project
+# Run `import Pkg; Pkg.add("ColorTypes")` to install the ColorTypes package
+import ColorTypes: RGB
+save("test.pfm", rand(RGB, 100, 100))
+load("test.pfm")
 ```
 
 The `save` function will take `::AbstractMatrix{<:RGB}` arguments, but elements will be implicitly converted to `RGB{Float32}`. The `load` function only returns objects of type `Matrix{RGB{Float32}}`.
