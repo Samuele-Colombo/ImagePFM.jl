@@ -14,9 +14,9 @@ Provides load/save functionalities from [pfm files](http://www.pauldebevec.com/R
 The package depends on [this custom fork](https://github.com/Samuele-Colombo/FileIO.jl) of the FileIO package. Note that if FileIO is already present (e.g. the original package), it will be overwritten by this custom version.
 
 ```julia
-julia> # Press ']' to enter the Pkg REPL mode
-pkg> add https://github.com/Samuele-Colombo/FileIO.jl
-pkg> add https://github.com/Samuele-Colombo/ImagePFM.jl
+import Pkg
+Pkg.add(url="https://github.com/Samuele-Colombo/FileIO.jl")
+Pkg.add(url="https://github.com/Samuele-Colombo/ImagePFM.jl")
 ```
 
 ## Usage
