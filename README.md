@@ -5,7 +5,9 @@
 [status]: https://img.shields.io/badge/project_status-stable-389826?style=flat
 [package-version]: https://img.shields.io/badge/package_version-1.0-blue?style=flat
 
-FileIO.jl integration for image files. Provides load/save functionalities from [pfm files](http://www.pauldebevec.com/Research/HDR/PFM/).
+FileIO.jl integration for image files.
+
+Provides load/save functionalities from [pfm files](http://www.pauldebevec.com/Research/HDR/PFM/) using the `ColorTypes: RGB` type.
 
 ## Installation
 
@@ -19,7 +21,7 @@ pkg> add https://github.com/Samuele-Colombo/ImagePFM.jl
 
 ## Usage
 
-This module is not intended to be used directly, it only extends the capabilities of the `FileIO` package including the `pfm` format load/save.
+This package is not intended to be used directly, it only extends the capabilities of the `FileIO` package including the `pfm` format load/save. Since this package uses `ColorTypes: RGB` type for encoding the image informations, the matrix passed to the `save` function must use `ColorTypes: RGB` as element type.
 
 ```julia
 using FileIO
