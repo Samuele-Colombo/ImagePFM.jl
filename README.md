@@ -11,9 +11,9 @@ FileIO.jl integration for image files. Provides load/save functionalities from [
 
 The package depends on [this custom fork](https://github.com/Samuele-Colombo/FileIO.jl) of the FileIO package. Note that if FileIO is already present (e.g. the original package), it will be overwritten by this custom version.
 
-```jl
-pkg> # Press ']' to enter the Pkg REPL mode
-pkg> add https://github.com/Samuele-Colombo/FileIO.jl # custom fork of `FileIO`
+```julia
+julia> # Press ']' to enter the Pkg REPL mode
+pkg> add https://github.com/Samuele-Colombo/FileIO.jl
 pkg> add https://github.com/Samuele-Colombo/ImagePFM.jl
 ```
 
@@ -21,7 +21,7 @@ pkg> add https://github.com/Samuele-Colombo/ImagePFM.jl
 
 This module is not intended to be used directly, it only extends the capabilities of the `FileIO` package including the `pfm` format load/save.
 
-```jl
+```julia
 julia> using FileIO
 julia> import ColorTypes: RGB # `ColorTypes` must be in current project
 julia> save("test.pfm", rand(RGB, 100, 100))
