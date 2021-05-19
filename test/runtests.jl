@@ -11,14 +11,14 @@ endian_f        = little_endian ? ltoh : ntoh
 test_matrix     = RGB{Float32}[RGB(1.0e1, 2.0e1, 3.0e1) RGB(1.0e2, 2.0e2, 3.0e2)
                                RGB(4.0e1, 5.0e1, 6.0e1) RGB(4.0e2, 5.0e2, 6.0e2)
                                RGB(7.0e1, 8.0e1, 9.0e1) RGB(7.0e2, 8.0e2, 9.0e2)]
-expected_output = open(read, little_endian ? "reference_le.pfm" : "reference_be.pfm")
+expected_output_file = little_endian ? "reference_le.pfm" : "reference_be.pfm"
 
 # test color write to IO
 @testset "write" begin
     image = test_matrix
     io = IOBuffer()
     ImagePFM.write(io, format"PFM", image)
-    @test take!(io) == expected_output
+    @test take!(io) == open(read, expected_output_file)
 end
 
 # test _parse_endianness
@@ -74,9 +74,9 @@ end
     @test_throws EOFError _read_matrix(io, eltype(test_matrix), size(test_matrix)...)
 end
 
-# test read(io, ::FE"PFM"
+# test read(io, ::FE"PFM")
 @testset "read" begin
-    img = ImagePFM.read(IOBuffer(expected_output), format"PFM")
+    img = ImagePFM.read(IOBuffer(open(read, expected_output_file)), format"PFM")
     @test size(img) == size(test_matrix)
     @test all(img == test_matrix)
     
