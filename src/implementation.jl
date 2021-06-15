@@ -1,13 +1,22 @@
-# `true` if system is little_endian
+# ImagePFM.jl
+# FileIO.jl integration for PFM image files.
+# Copyright (c) 2021 Samuele Colombo, Paolo Galli
+
+
+"""
+    little_endian
+
+`true` if system is little endian, `false` if big endian.
+"""
 const little_endian = ENDIAN_BOM == 0x04030201
 
-# write on stream in PFM format
+
 """
-    write(io::IO, format"PFM", image)
+    write(io::IO, ::Type{format"PFM"}, image::AbstractMatrix{<:RGB})
 
 Write an image to stream in PFM format.
 
-A PFM files has an head containing, in order, 
+A PFM files has an head containing, in order,
     - the magic bytes `PF\\n`,
     - the image width and height,
     - either -1.0 or 1.0 for little and big endian encoding of binary data respectively.
@@ -27,24 +36,38 @@ julia> ImagePFM.write(io, format"PFM", image) # write to stream in pfm format, r
 """
 function write(io::IO, ::Type{format"PFM"}, image::AbstractMatrix{<:RGB})
     head = transcode(UInt8, "PF\n$(join(size(image)," "))\n$(little_endian ? -1. : 1.)\n")
-    Base.write(io, head, (c for c ∈ @view image[:, end:-1:begin])...)
+    write(io, head, (c for c ∈ @view image[:, end:-1:begin])...)
 end
 
-# overload of the `Base.write` function for the RGB type
-# behavior is similar to the one of a generic container
-function Base.write(io::IO, c::RGB)
-    Base.write(io, c.r, c.g, c.b)
-end
 
-# read PFM file from stream
 """
-    read(io::IO, format"PFM")
+    write(io::IO, c::RGB{Float32})
 
-Read a PFM image from stream. 
+Overload of the `write` function for the RGB type behavior is similar to the one of a generic container.
+"""
+function write(io::IO, c::RGB{Float32})
+    write(io, c.r, c.g, c.b)
+end
 
-After skipping the magic bytes `PF\\n` the image width and height will be parsed, then the source endiannes. 
+
+"""
+    write(io::IO, c::RGB)
+
+Throw error if `eltype(c) != Float32``
+"""
+function write(io::IO, c::RGB)
+    throw(InvalidRGBEltype())
+end
+
+
+"""
+    read(io::IO, fmt::Type{format"PFM"})
+
+Read a PFM image from stream.
+
+After skipping the magic bytes `PF\\n` the image width and height will be parsed, then the source endiannes.
 The `RGB(Float32)` matrix will be read up to the `(width * height)`th element. The presence of additional data won't be considered an error.
-Note that, unlike `Base.read`, this function will convert endiannes for you from the declared source endiannes to the host endiannes.
+Note that, unlike `read`, this function will convert endiannes for you from the declared source endiannes to the host endiannes.
 """
 function read(io::IO, fmt::Type{format"PFM"})
     try
@@ -55,7 +78,7 @@ function read(io::IO, fmt::Type{format"PFM"})
     img_width, img_height = io |> _read_line |> _parse_img_size
     endian_f = io |> _read_line |> _parse_endianness
 
-    try 
+    try
         map(endian_f, _read_matrix(io, RGB{Float32}, img_width, img_height))[:, end:-1:begin]
     catch e
         isa(e, ArgumentError) && throw(InvalidPfmFileFormat("invalid bytestream in PFM file: corrupted binary data."))
@@ -64,19 +87,30 @@ function read(io::IO, fmt::Type{format"PFM"})
     end
 end
 
+
 #####################
 # SUPPORT FUNCTIONS #
 #####################
 
-# parse a string formatted like "$img_width $img_height" and return both values
+
+"""
+    _parse_img_size(line::String)
+
+Parse a string formatted like "img_width img_height" and return both values
+"""
 function _parse_img_size(line::String)
     elements = split(line, ' ')
     correct_length = 2
     (length(elements) == correct_length) || throw(InvalidPfmFileFormat("invalid head in PFM file: image size: expected $correct_length dimensions got $(length(elements))."))
-    img_width, img_height = map(_parse_int ∘ string, elements)
+    map(_parse_int ∘ string, elements)
 end
 
-# verify that the given String is parsable to a type `UInt` and return its parsed value
+
+"""
+    _parse_int(str::String)
+
+Verify that the given String is parsable to a type `UInt` and return its parsed value
+"""
 function _parse_int(str::String)
     DestT = UInt
     try
@@ -87,15 +121,21 @@ function _parse_int(str::String)
     end
 end
 
-# verify that the given String is parsable to type `Float32` and is equal to ±1.0
-# if the parsed value is equal to +1.0 then file endianness is big-endian
-# else if it is equal to -1.0 then endianness is little-endian
-# return a function that translates from file endianness to host endianness
+
+"""
+    _parse_endianness(line::String)
+
+Verify that the given String is parsable to type `Float32` and is equal to ±1.0:
+if the parsed value is equal to +1.0 then file endianness is big-endian,
+else if it is equal to -1.0 then endianness is little-endian.
+
+Return a function that translates from file endianness to host endianness.
+"""
 function _parse_endianness(line::String)
     DestT = Float32
     endian_spec = try
         parse(DestT, line)
-    catch e 
+    catch e
         isa(e, ArgumentError) && throw(InvalidPfmFileFormat("invalid head in PFM file: endianness: \"$line\" is not parsable to type $DestT."))
         rethrow(e)
     end
@@ -110,9 +150,14 @@ function _parse_endianness(line::String)
     end
 end
 
-# read line from stream, return nothing if eof, throw exceptions if read string is not ascii
-# and if newlines are not LF conform (it may signal that file corruption occurred
-# in file transfer from other systems) else return line
+
+"""
+    _read_line(io::IO)
+
+Read line from stream, return nothing if eof, throw exceptions if read string is not ascii
+and if newlines are not LF conform (it may signal that file corruption occurred
+in file transfer from other systems) else return line.
+"""
 function _read_line(io::IO)
     eof(io) && return nothing
     line = readline(io, keep=true)
@@ -121,7 +166,12 @@ function _read_line(io::IO)
     line
 end
 
-# read a DestT instance from stream, return read value
+
+"""
+    _read_type(io::IO, DestT::Type)
+
+Read a DestT instance from stream, return read value.
+"""
 function _read_type(io::IO, DestT::Type)
     eof(io) && return nothing
     len = sizeof(DestT)
@@ -130,15 +180,25 @@ function _read_type(io::IO, DestT::Type)
     reinterpret(DestT, data)[1]
 end
 
-# Utility interface for a stram containing at least `n` `T` type instances. 
-# Useful for reading sets of values in a more compact notation
+
+"""
+    _TypeStream
+
+Utility interface for a stram containing at least `n` `T` type instances.
+Useful for reading sets of values in a more compact notation.
+"""
 struct _TypeStream
     io::IO
     T::Type
     n::Integer
 end
 
-# Iterator over the interface
+
+"""
+    iterate(s::_TypeStream, state = 1)
+
+Iterator over the interface.
+"""
 function iterate(s::_TypeStream, state = 1)
     if state <= s.n
         eof(s.io) && throw(EOFError())
@@ -148,12 +208,32 @@ function iterate(s::_TypeStream, state = 1)
     end
 end
 
-# Utility function to read single instance of an `RGB` type
-function _read(io::IO, C::Type{<:RGB})
+
+"""
+    _read(io::IO, C::Type{RGB{Float32}})
+
+Utility function to read single instance of an `RGB` type.
+"""
+function _read(io::IO, C::Type{RGB{Float32}})
     C(_TypeStream(io, eltype(C), 3)...)
 end
 
-# utility function to read the image matrix from file
+
+"""
+    _read(io::IO, C::Type{<:RGB})
+
+    Throw error if `eltype(c) != Float32``
+"""
+function _read(io::IO, C::Type{<:RGB})
+    throw(InvalidRGBEltype())
+end
+
+
+"""
+    _read_matrix(io::IO, DestT::Type, mat_width, mat_height)
+
+Utility function to read the image matrix from file.
+"""
 function _read_matrix(io::IO, DestT::Type, mat_width, mat_height)
     mat = Matrix{DestT}(undef, mat_width, mat_height)
     for i in LinearIndices(mat)

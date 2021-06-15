@@ -1,17 +1,41 @@
+# ImagePFM.jl
+# FileIO.jl integration for PFM image files.
+# Copyright (c) 2021 Samuele Colombo, Paolo Galli
+
+
+"""
+    ImagePFM
+
+FileIO.jl integration for PFM image files.
+"""
 module ImagePFM
 
-import Base: iterate
-import ColorTypes: RGB
-using FileIO: File, Stream, stream, DataFormat, @format_str, skipmagic, query
-export read, write, InvalidPfmFileFormat
+
+using Base: Float32
+import Base:
+    iterate, read, write
+
+import ColorTypes:
+    RGB
+
+using FileIO:
+    @format_str,
+    DataFormat, File, Stream,
+    query, skipmagic, stream
+
+export
+    InvalidPfmFileFormat, InvalidRGBEltype
+
 
 include("exceptions.jl")
 include("implementation.jl")
+
 
 #=
 Here we implement the `load` and `save` methods for the PFM data format that will be used by `FileIO`
 For more information consult the `FileIO` documentation on adding new formats and implementing load/save behavior
 =#
+
 
 function load(f::File{DataFormat{:PFM}}; kwargs...)
     open(f) do s
@@ -41,4 +65,5 @@ function save(s::Stream{FMT}, image::AbstractMatrix; permute_horizontal=false, m
     end
 end
 
-end # module
+
+end # module ImagePFM

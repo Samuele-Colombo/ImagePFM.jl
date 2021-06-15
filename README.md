@@ -3,9 +3,9 @@
 ![status][status] ![package-version][package-version]
 
 [status]: https://img.shields.io/badge/project_status-stable-389826?style=flat
-[package-version]: https://img.shields.io/badge/package_version-1.0-blue?style=flat
+[package-version]: https://img.shields.io/badge/package_version-v2.0.0-blue?style=flat
 
-FileIO.jl integration for image files.
+FileIO.jl integration for PFM image files.
 
 Provides load/save functionalities from [pfm files](http://www.pauldebevec.com/Research/HDR/PFM/) using the `ColorTypes: RGB` type.
 
