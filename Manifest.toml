@@ -25,11 +25,11 @@ uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [[FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "358cabeb5a507d6a0f3dabdaea7c61fd0936f99b"
+git-tree-sha1 = "057d13705707c52fa11b8bbc7a3ddb8a959e9690"
 repo-rev = "master"
 repo-url = "https://github.com/Samuele-Colombo/FileIO.jl"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.9.0"
+version = "1.10.1"
 
 [[FixedPointNumbers]]
 deps = ["Statistics"]
